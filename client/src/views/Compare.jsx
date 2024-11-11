@@ -1,63 +1,56 @@
-import React from "react";
+
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useState, useEffect } from 'react'
-function Compare(){
-    const [data, setData]=useState([]);
-    const [loading, setLoading]=useState(true);
+import LaptopTable from "../component/LaptopTable";
 
-    const fetchLaptop= async()=>{
-        setLoading(true);
-        const formData=new FormData();
-        // formData.append("apikey",`${import.meta.env.VITE_API_KEY}`);
-        formData.append("apikey","112233aabbcc");
-        formData.append("method","get_model_info");
-        formData.append("param[model_id]","4511");
-        console.log(import.meta.env.VITE_API_URL);
-        //console.log(import.meta.env.rest);
+function Compare() {
+    const [laptopData, setLaptopData] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-        try{
-            const res=await axios.post(`${import.meta.env.VITE_API_URL}`,formData,{
-                headers:{
-                    "Content-Type":"multipart/form-data"
-                },
-            });
-            setData(res.data.result[0]);
-            console.log("Hiii");
-            console.log(res.data.result[0]);
-            setLoading(false);
+  const modelId = "4511"; // replace with actual model_id
 
-        }catch(err){
-            console.log("Error",err);
-            setLoading(false);
+    const fetchLaptopData= async()=>{
+            setLoading(true);
+            const formData=new FormData();
+            // formData.append("apikey",`${import.meta.env.VITE_API_KEY}`);
+            formData.append("apikey","112233aabbcc");
+            formData.append("method","get_model_info");
+            formData.append("param[model_id]",modelId);
+            console.log(import.meta.env.VITE_API_URL);
+    
+            try{
+                const res=await axios.post(`${import.meta.env.VITE_API_URL}`,formData,{
+                    headers:{
+                        "Content-Type":"multipart/form-data"
+                    },
+                });
+                setLaptopData(res.data.result[0]);
+                //console.log("Hiii");
+                console.log(res.data.result[0]);
+                setLoading(false);
+    
+            }catch(err){
+                console.log("Error",err);
+                setLoading(false);
+            }
+    
+            
         }
 
-        
-    }
- 
- 
     useEffect(()=>{
-        fetchLaptop();
+        fetchLaptopData();
+    },[modelId]);
 
-    },[]);
-    return(
-        <div>
-            <h1 className="text-red-700 text-4xl text-center">Compare</h1>
-            <div>
-                {loading ? <h1>Loading...</h1> :(
-                    <div>
-                        {data.model_info.map((item)=>{
-                            return(
-                                <div key={item.id}>
-                                    <h1>{item.name}</h1>
-                                   
-                                </div>
-                            )
-                        })}
-                    </div>
-                )}
-               
-            </div>
-        </div>
-    )
+  
+
+  return (
+    <div className="container mx-auto py-10">
+      {laptopData ? (
+        <LaptopTable laptopData={laptopData} />
+      ) : (
+        <p>Loading laptop data...</p>
+      )}
+    </div>
+  );
 }
 export default Compare;

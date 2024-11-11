@@ -6,6 +6,8 @@ import './App.css'
 import axios from 'axios'
 import HomePage from './views/HomePage'
 import Compare from './views/Compare'
+import { GetData } from "./context/DataContext";
+
 
 
 
@@ -15,18 +17,21 @@ function App() {
 
   return (
     <>
-      <Router future={{
-        v7_startTransition: true,
-        v7_normalizeFormMethod: true,
-        v7_partialHydration: true,
-        v7_relativeSplatPath: true,
-        v7_skipActionErrorRevalidation: true
-      }}>
-        <Routes>
-          <Route path="/homePage" element={<HomePage />} />
-          <Route path="/homePage/compare" element={<Compare />} />
-        </Routes>
-      </Router>
+   
+      <GetData>
+        <Router future={{
+          v7_startTransition: true,
+          v7_normalizeFormMethod: true,
+          v7_partialHydration: true,
+          v7_relativeSplatPath: true,
+          v7_skipActionErrorRevalidation: true
+        }}>
+          <Routes>
+            <Route path="/homePage" element={<HomePage />} />
+            <Route path="/homePage/compare" element={<Compare />} />
+          </Routes>
+        </Router>
+      </GetData>
 
 
 

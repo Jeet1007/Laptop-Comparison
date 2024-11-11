@@ -7,6 +7,8 @@ import axios from 'axios'
 import HomePage from './views/HomePage'
 import Compare from './views/Compare'
 import { GetData } from "./context/DataContext";
+import ComparisonPage from './views/ComparisonPage'
+
 
 
 
@@ -27,7 +29,9 @@ function App() {
           v7_skipActionErrorRevalidation: true
         }}>
           <Routes>
+            <Route path="/" element={<HomePage />} />
             <Route path="/homePage" element={<HomePage />} />
+            <Route path="/compare/:id1/:id2" element={<ComparisonPage />} />
             <Route path="/homePage/compare" element={<Compare />} />
           </Routes>
         </Router>

@@ -1,11 +1,14 @@
 import React from "react";
 
 const LaptopDetails = ({ details }) => {
+    //console.log("-----------------------------------------------------------");
+    //console.log("details",details);
   return (
     <div className="text-sm">
       <div className="mb-4">
         <h2 className="text-lg font-semibold">Model Information</h2>
-        <p>Model Name: {details.model_info.name}</p>
+        <p>Model Name: {details.model_info[0].name}</p>
+        //{console.log("details.model_info.noteb_name",details.model_info[0].name)}
         <p>Launch Date: {details.model_resources.launch_date}</p>
       </div>
       <div className="mb-4">

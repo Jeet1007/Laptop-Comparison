@@ -22,7 +22,9 @@ const CompareComponent = () => {
 
   return (
     <div className="navbar">
-      <h1 className="navbar-title">Laptop Comparison</h1>
+      <a href="/homePage" className="navbar-logo">
+        <h1 className="navbar-title">Laptop Comparison</h1>
+      </a>
       <div className="navbar-search">
         <LaptopSearch
           placeholder="Search Laptop 1"

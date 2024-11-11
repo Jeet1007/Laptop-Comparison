@@ -4,10 +4,13 @@ import axios from "axios";
 import LaptopTable from "../component/LaptopTable";
 import TextArea from "../component/TextArea";
 import Comment from "../component/Comment";
+import { useParams } from "react-router-dom";
 
 function Compare() {
     const [laptopData, setLaptopData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const { id } = useParams();
+    
 
     const modelId = "4511"; // replace with actual model_id
 
@@ -17,7 +20,7 @@ function Compare() {
         formData.append("apikey",`${import.meta.env.VITE_API_KEY}`);
         //formData.append("apikey", "112233aabbcc");
         formData.append("method", "get_model_info_all");
-        formData.append("param[model_id]", modelId);
+        formData.append("param[model_id]", id);
         console.log(import.meta.env.VITE_API_URL);
 
         try {

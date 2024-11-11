@@ -12,7 +12,7 @@ import {
 function ImageCarousel({ images }) {
     //console.log(images);
     return (
-        <Carousel className="w-full max-w-xs">
+        <Carousel className="w-full max-w-md">
           <CarouselContent>
             {images.map((image, index) => (
               <CarouselItem key={index}>

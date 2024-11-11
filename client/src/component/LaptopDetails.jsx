@@ -1,44 +1,24 @@
-import React from "react";
+
+import React from 'react';
+import Details from './Details';
 
 const LaptopDetails = ({ details }) => {
-    //console.log("-----------------------------------------------------------");
-    //console.log("details",details);
   return (
-    <div className="text-sm">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">Model Information</h2>
-        <p>Model Name: {details.model_info[0].name}</p>
-        //{console.log("details.model_info.noteb_name",details.model_info[0].name)}
-        <p>Launch Date: {details.model_resources.launch_date}</p>
-      </div>
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">CPU</h2>
-        <p>Producer: {details.cpu.prod}</p>
-        <p>Model: {details.cpu.model}</p>
-        <p>Base Speed: {details.cpu.base_speed} MHz</p>
-        <p>Boost Speed: {details.cpu.boost_speed} MHz</p>
-        <p>Cores: {details.cpu.cores}</p>
-      </div>
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">Memory</h2>
-        <p>Size: {details.memory.size} GB</p>
-        <p>Type: {details.memory.type}</p>
-      </div>
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">Storage</h2>
-        <p>Capacity: {details.primary_storage.cap} GB</p>
-        <p>Type: {details.primary_storage.model}</p>
-      </div>
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">Display</h2>
-        <p>Resolution: {details.display.horizontal_resolution} x {details.display.vertical_resolution}</p>
-        <p>Type: {details.display.type}</p>
-      </div>
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">Battery</h2>
-        <p>Capacity: {details.battery.capacity} Wh</p>
-        <p>Life: {details.battery_life_hours}</p>
-      </div>
+    <div>
+
+     <Details name={"CPU"} part_name={details.cpu} select={details.cpu.selected} />
+     <Details name={"Display"} part_name={details.display} select={details.display.selected} />
+     <Details name={"Memory"} part_name={details.memory} select={details.memory.selected} />
+      <Details name={"Motherboard"} part_name={details.motherboard} select={details.motherboard.selected} />
+     
+      <Details name={"Storage"} part_name={details.primary_storage} select={details.primary_storage.selected} />
+  
+      <Details  name={"Battery"} part_name={details.battery} select={details.battery.selected} />
+      <Details name={"Wireless"} part_name={details.wireless} select={details.wireless.selected} />
+      <Details name={"Operating System"} part_name={details.operating_system} select={details.operating_system.selected} />
+      <Details name={"Warranty"} part_name={details.warranty} select={details.warranty.selected} />
+
+     
     </div>
   );
 };

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import CompareLaptop from "../component/CompareLaptop";
-import ComboBox from "./ComboBox";
+
 
 const ComparisonPage = () => {
   const { id1, id2 } = useParams();
@@ -83,11 +83,11 @@ const ComparisonPage = () => {
 
   return (
     <>
-      <h1>Comparison Page</h1>
+      {/* <h1>Comparison Page</h1>
       <h2>Product 1: {id1}</h2>
-      <h2>Product 2: {id2}</h2>
+      <h2>Product 2: {id2}</h2> */}
       {loading && <p>Loading...</p>}
-      <div>
+      <div className="w-5/6 flex flex-row mx-auto">
         <div className="container w-5/6 mx-auto py-10">
           {laptopData1 ? (
             <CompareLaptop laptopData={laptopData1} />
@@ -103,7 +103,7 @@ const ComparisonPage = () => {
           )}
         </div>
       </div>
-      <ComboBox />
+      {/* <ComboBox /> */}
 
 
       {/* <CompareLaptop laptopData1={laptopData1}/>

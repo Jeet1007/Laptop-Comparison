@@ -10,7 +10,7 @@ const LaptopImage = ({ imageUrl }) => {
     const images = [image_1, image_2, image_3, image_4];
   return (
     <>
-        <ImageCarousel images={images} />
+        <ImageCarousel  images={images} />
     </>
   );
 };

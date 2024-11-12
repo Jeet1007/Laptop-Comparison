@@ -1,48 +1,69 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../styles/CompareComponent.css";
 
 const LaptopSearch = ({ placeholder, onSelectLaptop }) => {
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState([]);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [query, setQuery] = useState(""); // The search query
+  const [loading, setLoading] = useState(false); // Loading state
+  const [result, setResult] = useState([]); // Search result
+  const [dropdownOpen, setDropdownOpen] = useState(false); // Dropdown visibility
 
-  const fetchLaptops = async () => {
-    setLoading(true);
+  // Function to fetch laptops from the API
+  const fetchLaptops = async (searchQuery) => {
+    setLoading(true); // Start loading
     const formData = new FormData();
-    formData.append("apikey",`${import.meta.env.VITE_API_KEY}`);
+    formData.append("apikey", `${import.meta.env.VITE_API_KEY}`);
     formData.append("method", "list_models");
-    formData.append("param[model_name]", query);
-
-    //console.log(query);
+    formData.append("param[model_name]", searchQuery);
+    // console.log(searchQuery);
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}`,
+        `${import.meta.env.VITE_API_URL}`, // API URL
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
+
+      // Update state with the results
       setResult(res.data.result || []);
-      setLoading(false);
-      setDropdownOpen(true);
+      setLoading(false); // Stop loading
+      setDropdownOpen(true); // Open dropdown
     } catch (err) {
       console.error("Error:", err);
-      setLoading(false);
+      setLoading(false); // Stop loading in case of error
     }
   };
 
+  // Handle input change, update query state
   const handleSearchChange = (e) => {
-    setQuery(e.target.value);
-    if (e.target.value.trim() !== "") fetchLaptops();
-    else setDropdownOpen(false);
+    const value = e.target.value;
+    setQuery(value); // Update query state
+    if (value.trim() !== "") {
+      setDropdownOpen(true); // Show dropdown
+    } else {
+      setDropdownOpen(false); // Hide dropdown
+    }
   };
 
+  // Trigger the API call when query changes
+  useEffect(() => {
+    if (query.trim() !== "") {
+      const delayDebounce = setTimeout(() => {
+        fetchLaptops(query);
+      }, 500);
+
+      return () => clearTimeout(delayDebounce);
+    } else {
+      setDropdownOpen(false); // Hide dropdown when query is empty
+    }
+  }, [query]); // Run effect whenever `query` changes
+
+  // Handle selection of a laptop from the dropdown
   const handleOptionClick = (id, name) => {
     onSelectLaptop({ id, name });
-    setQuery(name);
-    setDropdownOpen(false);
+    setQuery(name); // Set the query to the selected laptop name
+    setDropdownOpen(false); // Close dropdown
   };
 
   return (
@@ -59,7 +80,7 @@ const LaptopSearch = ({ placeholder, onSelectLaptop }) => {
         <div className="dropdown-list">
           {Object.keys(result).length > 0 ? (
             Object.keys(result)
-              .slice(0, 50)
+              .slice(0, 50) // Limit to 50 results
               .map((laptop, index) => (
                 <div
                   key={index}
@@ -71,7 +92,7 @@ const LaptopSearch = ({ placeholder, onSelectLaptop }) => {
                     )
                   }
                 >
-                  {result[laptop].model_info[0].name}
+                  {result[laptop].model_info[0].noteb_name}
                 </div>
               ))
           ) : (

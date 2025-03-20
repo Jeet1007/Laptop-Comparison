@@ -10,37 +10,30 @@ import Login from './views/Login'
 import SignUp from './views/SignUp'
 import Tech from './views/Tech'
 import { GetData } from "./context/DataContext";
-import ComparisonPage from './views/ComparisonPage'
-import Footer from './component/Footer'
+import ComparisonPage from "./views/ComparisonPage";
+import Footer from "./component/Footer";
 import NavBar from "@/component/NavBar";
 import CompareComponent from "@/component/CompareComponent";
 
-
-
-
-
 function App() {
-
-
-
   return (
     <>
-    
       <GetData>
-      
-        <Router future={{
-          v7_startTransition: true,
-          v7_normalizeFormMethod: true,
-          v7_partialHydration: true,
-          v7_relativeSplatPath: true,
-          v7_skipActionErrorRevalidation: true
-        }}>
+        <Router
+          future={{
+            v7_startTransition: true,
+            v7_normalizeFormMethod: true,
+            v7_partialHydration: true,
+            v7_relativeSplatPath: true,
+            v7_skipActionErrorRevalidation: true,
+          }}
+        >
           <CompareComponent />
           
           <Routes>
-            
+            <Route path="/" element={<Navigate to={"/homePage"} />}></Route>
             <Route path="/homePage" element={<HomePage />} />
-            <Route path="/compare/:id1/:id2" element={<ComparisonPage />} />
+            <Route path="/compare/:id1/:id2" element={<ComparisonPage />} />
             <Route path="/homePage/:id" element={<Compare />} />
             <Route path="/login" element={<Login/>} />
             <Route path="/SignUp" element={<SignUp/>} />
@@ -51,12 +44,8 @@ function App() {
         </Router>
         <Footer />
       </GetData>
-
-
-
-
     </>
-  )
+  );
 }
 
-export default App
+export default App;

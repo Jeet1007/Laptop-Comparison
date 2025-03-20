@@ -36,7 +36,7 @@ const CompareComponent = () => {
         />
         <button
           onClick={handleCompare}
-          //   disabled={!laptop1.id || !laptop2.id}
+          disabled={!laptop1.id || !laptop2.id}
           className={`compare-button ${
             laptop1.id && laptop2.id ? "active" : ""
           }`}

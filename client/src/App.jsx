@@ -6,6 +6,9 @@ import './App.css'
 import axios from 'axios'
 import HomePage from './views/HomePage'
 import Compare from './views/Compare'
+import Login from './views/Login'
+import SignUp from './views/SignUp'
+import Tech from './views/Tech'
 import { GetData } from "./context/DataContext";
 import ComparisonPage from './views/ComparisonPage'
 import Footer from './component/Footer'
@@ -33,12 +36,17 @@ function App() {
           v7_skipActionErrorRevalidation: true
         }}>
           <CompareComponent />
-         
+          
           <Routes>
             
             <Route path="/homePage" element={<HomePage />} />
             <Route path="/compare/:id1/:id2" element={<ComparisonPage />} />
             <Route path="/homePage/:id" element={<Compare />} />
+            <Route path="/login" element={<Login/>} />
+            <Route path="/SignUp" element={<SignUp/>} />
+            {/* Techniqual Glossary */}
+            <Route path="/homePage/tech" element={<Tech />} />
+
           </Routes>
         </Router>
         <Footer />

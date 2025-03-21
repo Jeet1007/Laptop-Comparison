@@ -14,6 +14,7 @@ import ComparisonPage from "./views/ComparisonPage";
 import Footer from "./component/Footer";
 import NavBar from "@/component/NavBar";
 import CompareComponent from "@/component/CompareComponent";
+import { Navigate } from "react-router-dom";
 
 function App() {
   return (

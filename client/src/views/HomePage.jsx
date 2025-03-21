@@ -1,13 +1,21 @@
 import React, { useState } from "react";
 import ComboBox from "./ComboBox";
 import { useNavigate } from "react-router";
+import FlootingButton from "../component/FlootingButton"
+import AuthButtons from "@/components/ui/logsin";
 
-const HomePage = () => {
+
+  const HomePage = () => {
   const navigate = useNavigate();
   const [id, setId] = useState(null);
+  const fun = () =>{
+    navigate("/homePage/tech");
+  }
 
   return (
     <>
+    <div onClick={fun}><FlootingButton /></div>
+      
       <div className="flex flex-col min-h-screen">
         {/* Navbar Section */}
         <section className="relative h-[600px] flex items-center justify-center">
@@ -49,7 +57,7 @@ const HomePage = () => {
         </section>
 
         {/* Features Section */}
-        <section className="py-16 mt-24 bg-gradient-to-r from-blue-50 via-gray-100 to-white">
+        <section className="py-20 mt-24 bg-gradient-to-r from-blue-50 via-gray-100 to-white">
           <div className="container mx-auto text-center">
             <h2 className="text-4xl font-bold text-gray-800 mb-10 tracking-wide">
               Why Choose LaptopCompare?

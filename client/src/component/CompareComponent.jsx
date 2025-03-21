@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import LaptopSearch from "./LaptopSearch";
 import "../styles/CompareComponent.css";
+import AuthButtons from "@/components/ui/logsin";
 
 const CompareComponent = () => {
   const [laptop1, setLaptop1] = useState({ id: null, name: "" });
@@ -43,6 +44,7 @@ const CompareComponent = () => {
         >
           Compare
         </button>
+        <AuthButtons/>
       </div>
     </div>
   );

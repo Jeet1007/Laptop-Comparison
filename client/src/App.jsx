@@ -13,6 +13,7 @@ import { GetData } from "./context/DataContext";
 import ComparisonPage from "./views/ComparisonPage";
 import Footer from "./component/Footer";
 import NavBar from "@/component/NavBar";
+import Test from "./views/Test";
 import CompareComponent from "@/component/CompareComponent";
 import { Navigate } from "react-router-dom";
 
@@ -40,6 +41,7 @@ function App() {
             <Route path="/SignUp" element={<SignUp/>} />
             {/* Techniqual Glossary */}
             <Route path="/homePage/tech" element={<Tech />} />
+            <Route path="/test/api" element={<Test/>}/>
 
           </Routes>
         </Router>

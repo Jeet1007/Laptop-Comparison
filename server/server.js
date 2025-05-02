@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 connectDB().catch(err=> console.log(err));
 async function connectDB(){
     //add your own connection string
-    await mongoose.connect('mongodb://127.0.0.1:27017/LCS');
+    await mongoose.connect('mongodb+srv://yashowardhanjeet:Jeet7601@cluster0.kfckzj9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0');
     console.log('Database Connected');
 }
 
@@ -41,9 +41,9 @@ app.get('/api/insertonetime',async(req,res)=>{
 
 
 });
-
+//All details API
 app.get('/api/search',async(req,res)=>{
-    const {id,name,price,processor,ram,os,storage,img_link,display,rating,no_of_ratings,no_of_reviews,laptop_brand,os_brand}=req.query;
+    const {id,name,price,processor,ram,os,storage,img_link,display,rating,no_of_ratings,no_of_reviews,laptop_brand,os_brand, page=1}=req.query;
 
     
     let query = {
@@ -63,20 +63,94 @@ app.get('/api/search',async(req,res)=>{
         ...(os_brand && { os_brand })
       };
  
+      const limit=50;
+      const skip=(page-1)*limit;
 
+      try {
+        const laptops = await Laptop.find(query)
+            .limit(limit)
+            .skip(skip);
 
-    try{
-        const laptops=await Laptop.find(query);
-        res.status(200).json({success:true,laptops});
+        const totalResults = await Laptop.countDocuments(query); // Get total number of matching documents
+        const hasNext = page * limit < totalResults; // Check if there are more results
+
+        res.status(200).json({
+            success: true,
+            laptops,
+            hasNext,
+            totalResults,
+            currentPage: parseInt(page),
+            totalPages: Math.ceil(totalResults / limit)
+        });
     }catch(err){
         console.log(err);
         res.status(500).json({success:false,message:'Server Error'});
     }
 
-
-
 })
+//Suggestion API (auto complete)
+app.get('/api/suggestions', async (req, res) => {
+    const query = req.query.query || '';
+    try {
+      const suggestions = await Laptop.find({
+        name: { $regex: query, $options: 'i' }
+      })
+      .limit(30)
+      .select('name laptop_id img_link price processor ram rating laptop_brand');
+  
+      res.json(suggestions);
+    } catch (err) {
+      console.error('Error fetching suggestions:', err.message);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 
+  //Filer API
+  app.get('/api/filter', async (req, res) => {
+    const { processor, ram, os, storage, price } = req.query;
+  
+    let filter = {};
+  
+    if (processor) {
+      filter.processor = { $regex: processor, $options: 'i' };
+    }
+    if (ram) {
+      filter.ram = { $regex: ram, $options: 'i' };
+    }
+    if (os) {
+      filter.os = { $regex: os, $options: 'i' };
+    }
+    if (storage) {
+      filter.storage = { $regex: storage, $options: 'i' };
+    }
+    if (price) {
+      const [minPrice, maxPrice] = price.split('-').map(Number);
+      filter.price = { $gte: minPrice, $lte: maxPrice };
+    }
+    try {
+      const laptops = await Laptop.find(filter);
+      res.status(200).json({ success: true, laptops });
+    } catch (err) {
+      console.error('Error fetching filtered laptops:', err.message);
+      res.status(500).json({ success: false, message: 'Server Error' });
+    }
+  });
+
+//Comment API
+// app.post('api/comment',async(req,res)=>{
+//     const {name,comment}=req.body;
+//     try{
+//         const newComment=new Comment({
+//             name,
+//             comment
+//         });
+//         await newComment.save();
+//         res.status(200).json({success:true,message:'Comment added successfully'});
+//     }catch(err){
+//         console.log(err);
+//         res.status(500).json({success:false,message:'Server Error'});
+//     }
+// });
 app.listen(8080,()=>{
     console.log('Server Started at port 8080');
 })

@@ -2,6 +2,13 @@ const express = require('express');
 const mongoose = require('mongoose');
 const {importCSVData}= require('./csvtojson.js')
 const Laptop = require('./model/Laptop.js');
+const path = require('path');
+
+//.env
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+
+
+
 
 const cors=require('cors');
 
@@ -19,8 +26,13 @@ app.use(express.urlencoded({ extended: true }));
 connectDB().catch(err=> console.log(err));
 async function connectDB(){
     //add your own connection string
-    await mongoose.connect('mongodb+srv://yashowardhanjeet:Jeet7601@cluster0.kfckzj9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0');
-    console.log('Database Connected');
+    try{
+        await mongoose.connect(process.env.Local_URL || process.env.Mongo_URL);
+        // console.log(process.env.Mongo_URL);
+        console.log('Database Connected');
+    }catch(err){
+        console.log(err);
+    }
 }
 
 

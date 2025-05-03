@@ -3,6 +3,10 @@ const mongoose = require('mongoose');
 const {importCSVData}= require('./csvtojson.js')
 const Laptop = require('./model/Laptop.js');
 const path = require('path');
+const session = require('express-session');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const User = require('./model/users.js');
 
 //.env
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
@@ -23,6 +27,28 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
+//Seassion and Passport setup
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'laptop-compare-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { 
+        
+        httpOnly: true,
+        expires: Date.now() + 1000 * 60 * 60 * 24 * 7, // 1 week
+        maxAge: 1000 * 60 * 60 * 24 * 7
+          
+    } // Set to true if using HTTPS
+}))
+
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+
+//MongoDB connection
 connectDB().catch(err=> console.log(err));
 async function connectDB(){
     //add your own connection string
@@ -39,6 +65,55 @@ async function connectDB(){
 
 //api routes
 
+//Authentication API
+app.post('/api/register',async(req,res)=>{
+    try{
+        const {email,password,firstName,lastName} = req.body;
+        const user = new User({
+            email,
+            firstName,
+            lastName
+        });
+        const registeredUser = await User.register(user,password);
+
+        req.login(registeredUser,(err) =>{
+            if(err){
+                console.log('Login Error',err);
+                return res.status(500).json({success:false,message:'Login Error'});
+            }
+            res.status(200).json({success:true,message:'User Registered Successfully'});
+        })
+
+    }catch(err){
+        console.log('Registration Error',err);
+        res.status(500).json({success:false,message:'Server Error'});
+    }
+});
+//Login API
+app.post('/api/login',passport.authenticate('local'),(req,res)=>{
+    res.status(200).json({success:true,message:'User Logged In Successfully'});
+
+});
+//Logout API
+app.get('/api/logout',(req,res)=>{
+    req.logout((err)=>{
+        if(err){
+            console.log('Logout Error',err);
+            return res.status(500).json({success:false,message:'Logout Error'});
+        }
+        res.status(200).json({success:true,message:'User Logged Out Successfully'});
+    });
+});
+//Check Authentication API
+app.get('/api/check-auth',(req,res)=>{
+    if(req.isAuthenticated()){
+        res.status(200).json({success:true,user:req.user});
+    }else{
+        res.status(401).json({success:false,message:'User Not Authenticated'});
+    }
+});
+
+//Data filling API
 app.get('/api/insertonetime',async(req,res)=>{
     res.send('API is working');
     try{

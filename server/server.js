@@ -2,9 +2,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const {importCSVData}= require('./csvtojson.js')
 const Laptop = require('./model/Laptop.js');
-
+require('dotenv').config(); // Load environment variables
 const cors=require('cors');
 
+// const PORT = process.env.PORT || 8080;
 const corsOptions={
     origin: ["http://localhost:5173"]
 }
@@ -17,10 +18,14 @@ app.use(express.urlencoded({ extended: true }));
 
 
 connectDB().catch(err=> console.log(err));
-async function connectDB(){
-    //add your own connection string
-    await mongoose.connect('mongodb+srv://yashowardhanjeet:Jeet7601@cluster0.kfckzj9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0');
-    console.log('Database Connected');
+async function connectDB() {
+  try {
+      await mongoose.connect(process.env.MONGO_URI)
+      console.log('Database Connected');
+  } catch (err) {
+      console.error('Database connection error:', err);
+      process.exit(1); // Exit process with failure
+  }
 }
 
 

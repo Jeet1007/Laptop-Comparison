@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const {importCSVData}= require('./csvtojson.js')
 const Laptop = require('./model/Laptop.js');
+const Comment = require('./model/Review.js'); // adjust path as needed
+
 require('dotenv').config(); // Load environment variables
 const cors=require('cors');
 
@@ -142,20 +144,21 @@ app.get('/api/suggestions', async (req, res) => {
   });
 
 //Comment API
-// app.post('api/comment',async(req,res)=>{
-//     const {name,comment}=req.body;
-//     try{
-//         const newComment=new Comment({
-//             name,
-//             comment
-//         });
-//         await newComment.save();
-//         res.status(200).json({success:true,message:'Comment added successfully'});
-//     }catch(err){
-//         console.log(err);
-//         res.status(500).json({success:false,message:'Server Error'});
-//     }
-// });
+app.post('/api/comment',async(req,res)=>{
+    const {name,comment}=req.body;
+    try{
+        const newComment=new Comment({
+            name,
+            comment
+        });
+        // console.log(newComment);
+        await newComment.save();
+        res.status(200).json({success:true,message:'Comment added successfully'});
+    }catch(err){
+        console.log(err);
+        res.status(500).json({success:false,message:'Server Error'});
+    }
+});
 app.listen(8080,()=>{
     console.log('Server Started at port 8080');
 })

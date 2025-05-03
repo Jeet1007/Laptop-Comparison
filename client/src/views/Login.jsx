@@ -6,7 +6,29 @@ const Login = () => {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="max-w-sm w-full bg-white p-8 rounded-md shadow-md">
         <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
-        <form className="space-y-4">
+        <form className="space-y-4" action="/login" method="POST">
+        <div>
+            <label htmlFor="firstName" className="block font-medium text-gray-700 mb-1">
+              First Name
+            </label>
+            <input
+              id="firstName"
+              type="text"
+              className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:border-blue-500"
+              placeholder="Enter your First Name"
+            />
+          </div>
+          <div>
+            <label htmlFor="lastName" className="block font-medium text-gray-700 mb-1">
+              Last Name
+            </label>
+            <input
+              id="lastName"
+              type="text"
+              className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:border-blue-500"
+              placeholder="Enter your Last Name"
+            />
+          </div>
           <div>
             <label htmlFor="email" className="block font-medium text-gray-700 mb-1">
               Email

@@ -3,8 +3,12 @@ const mongoose = require('mongoose');
 const {importCSVData}= require('./csvtojson.js')
 const Laptop = require('./model/Laptop.js');
 const Comment = require('./model/Review.js'); // adjust path as needed
+const path = require('path');
+//.env
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
-require('dotenv').config(); // Load environment variables
+
+
 const cors=require('cors');
 
 // const PORT = process.env.PORT || 8080;
@@ -20,14 +24,15 @@ app.use(express.urlencoded({ extended: true }));
 
 
 connectDB().catch(err=> console.log(err));
-async function connectDB() {
-  try {
-      await mongoose.connect(process.env.MONGO_URI)
-      console.log('Database Connected');
-  } catch (err) {
-      console.error('Database connection error:', err);
-      process.exit(1); // Exit process with failure
-  }
+async function connectDB(){
+    //add your own connection string
+    try{
+        await mongoose.connect(process.env.Local_URL || process.env.Mongo_URL);
+        // console.log(process.env.Mongo_URL);
+        console.log('Database Connected');
+    }catch(err){
+        console.log(err);
+    }
 }
 
 

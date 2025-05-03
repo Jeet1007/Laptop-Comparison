@@ -68,11 +68,10 @@ async function connectDB(){
 //Authentication API
 app.post('/api/register',async(req,res)=>{
     try{
-        const {email,password,firstName,lastName} = req.body;
+        const {email,password,userName} = req.body;
         const user = new User({
             email,
-            firstName,
-            lastName
+            username: userName,
         });
         const registeredUser = await User.register(user,password);
 

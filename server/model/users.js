@@ -7,14 +7,6 @@ const UserSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  firstName: {
-    type: String,
-    required: true
-  },
-  lastName: {
-    type: String,
-    required: false
-  },
   favorites: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Laptop'

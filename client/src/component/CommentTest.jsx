@@ -1,58 +1,36 @@
 import React, { useState } from "react";
 
 function CommentTest() {
-  const [name, setName] = useState("");
+  const [user, setUser] = useState("");
+  const [laptop, setLaptop] = useState("");
   const [comment, setComment] = useState("");
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
 
     try {
       const res = await fetch("http://localhost:8080/api/comment", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name, comment }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user, laptop, comment }),
       });
 
       const data = await res.json();
-      if (res.ok) {
-        setMessage("✅ Comment submitted!");
-        setName("");
-        setComment("");
-      } else {
-        setMessage("❌ " + data.message);
-      }
+      setMessage(res.ok ? "✅ Comment added!" : "❌ " + data.message);
     } catch (err) {
-        console.error(err);
-        setMessage("❌ Server Error");
+      setMessage("❌ Server error");
     }
   };
 
   return (
-    <div style={styles.container}>
-      <h2>Test Comment Submission</h2>
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <input
-          style={styles.input}
-          type="text"
-          placeholder="Your name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-        <textarea
-          style={styles.input}
-          placeholder="Your comment"
-          rows="4"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          required
-        />
-        <button style={styles.button} type="submit">Submit</button>
+    <div style={{ maxWidth: 400, margin: "40px auto", fontFamily: "sans-serif" }}>
+      <h3>Test Comment Submission</h3>
+      <form onSubmit={handleSubmit}>
+        <input type="text" placeholder="User ID" value={user} onChange={(e) => setUser(e.target.value)} required style={styles.input} />
+        <input type="text" placeholder="Laptop ID" value={laptop} onChange={(e) => setLaptop(e.target.value)} required style={styles.input} />
+        <textarea placeholder="Comment" value={comment} onChange={(e) => setComment(e.target.value)} required rows="3" style={styles.input}></textarea>
+        <button type="submit" style={styles.button}>Submit</button>
       </form>
       {message && <p>{message}</p>}
     </div>
@@ -60,34 +38,8 @@ function CommentTest() {
 }
 
 const styles = {
-  container: {
-    maxWidth: "400px",
-    margin: "40px auto",
-    padding: "20px",
-    background: "#fff",
-    borderRadius: "10px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-    fontFamily: "sans-serif"
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-  },
-  input: {
-    marginBottom: "12px",
-    padding: "10px",
-    fontSize: "16px",
-    borderRadius: "6px",
-    border: "1px solid #ccc",
-  },
-  button: {
-    padding: "10px",
-    background: "#007bff",
-    color: "white",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-  }
+  input: { width: "100%", marginBottom: 10, padding: 10 },
+  button: { padding: 10, background: "#007bff", color: "#fff", border: "none", cursor: "pointer" },
 };
 
 export default CommentTest;

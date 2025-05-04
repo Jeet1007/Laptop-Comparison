@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import CommentTest from "../component/CommentTest";
 function Test(){
 
     const [laptopData, setLaptopData] = useState(null);
@@ -24,11 +25,14 @@ function Test(){
         
     };
 
+    //Test Comment
+       
     useEffect(() =>{
         fetchData();
     })
     return(
         <>
+        <CommentTest/>
             <h1>Hello</h1>
         </>
     )

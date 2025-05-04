@@ -174,7 +174,120 @@ app.get('/api/search', async (req, res) => {
   }
 
 })
-//Suggestion API (auto complete)
+//Advaced Search API
+app.get('/api/advancedsearch', async (req, res) => {
+  try {
+    // Extract query parameters
+    const { 
+      query, price_min, price_max, ram, processor, storage, 
+      laptop_brand, os, rating_min, sort_by, sort_order, page = 1, limit = 30 
+    } = req.query;
+
+    // Build the filter object
+    const filter = {};
+
+    // Text search across multiple fields if query is provided
+    if (query) {
+      const terms = query.split(/\s+/).filter(Boolean);
+      const fieldsToSearch = [
+        'name', 'ram', 'processor', 'os', 'storage',
+        'laptop_brand', 'os_brand', 'processor_brand', 'usecases'
+      ];
+
+      filter.$and = terms.map(term => ({
+        $or: fieldsToSearch.map(field => ({
+          [field]: { $regex: term, $options: 'i' }
+        }))
+      }));
+    }
+
+    // Add specific filters
+    if (price_min || price_max) {
+      filter.price = {};
+      if (price_min) filter.price.$gte = parseFloat(price_min);
+      if (price_max) filter.price.$lte = parseFloat(price_max);
+    }
+
+    if (ram) {
+      // Handle multiple RAM options
+      const ramOptions = Array.isArray(ram) ? ram : [ram];
+      filter.ram = { $in: ramOptions.map(r => new RegExp(r, 'i')) };
+    }
+
+    if (processor) {
+      // Handle multiple processor options
+      const processorOptions = Array.isArray(processor) ? processor : [processor];
+      filter.processor = { $in: processorOptions.map(p => new RegExp(p, 'i')) };
+    }
+
+    if (storage) {
+      // Handle multiple storage options
+      const storageOptions = Array.isArray(storage) ? storage : [storage];
+      filter.storage = { $in: storageOptions.map(s => new RegExp(s, 'i')) };
+    }
+
+    if (laptop_brand) {
+      // Handle multiple brand options
+      const brandOptions = Array.isArray(laptop_brand) ? laptop_brand : [laptop_brand];
+      filter.laptop_brand = { $in: brandOptions.map(b => new RegExp(b, 'i')) };
+    }
+
+    if (os) {
+      // Handle multiple OS options
+      const osOptions = Array.isArray(os) ? os : [os];
+      filter.os = { $in: osOptions.map(o => new RegExp(o, 'i')) };
+    }
+
+    if (rating_min) {
+      filter.rating = { $gte: parseFloat(rating_min) };
+    }
+
+    // Create sort object
+    const sortOptions = {};
+    if (sort_by) {
+      sortOptions[sort_by] = sort_order === 'desc' ? -1 : 1;
+    } else {
+      // Default sorting
+      sortOptions.rating = -1;
+    }
+
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const limitNum = parseInt(limit);
+
+    // Execute the query
+    const laptops = await Laptop.find(filter)
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(limitNum)
+      .select('name laptop_id img_link price processor ram storage rating laptop_brand os');
+
+    // Get total count for pagination
+    const totalResults = await Laptop.countDocuments(filter);
+    const totalPages = Math.ceil(totalResults / limitNum);
+
+    // Return results
+    res.json({
+      success: true,
+      laptops,
+      pagination: {
+        total: totalResults,
+        page: parseInt(page),
+        limit: limitNum,
+        totalPages,
+        hasNext: parseInt(page) < totalPages,
+        hasPrev: parseInt(page) > 1
+      }
+    });
+
+  } catch (err) {
+    console.error('Error in advanced search:', err.message);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+
+//Suggestions API(auto complete)
 app.get('/api/suggestions', async (req, res) => {
   const query = req.query.query || '';
   try {
@@ -221,6 +334,8 @@ app.get('/api/filter', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 });
+
+//Get User API
 
 //Comment API
 app.post("/api/comment", async (req, res) => {

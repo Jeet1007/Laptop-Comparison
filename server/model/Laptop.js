@@ -1,74 +1,65 @@
 const mongoose = require('mongoose');
 
-const LaptopSchema = new mongoose.Schema(
-  {
-    laptop_id: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    name: {
-      type: String,
-      required: true,
-    },
-    price: {
-      type: Number, // store as number (parse from string if needed)
-      required: true,
-    },
-    processor: {
-      type: String,
-      required: true,
-    },
-    ram: {
-      type: String,
-      required: true,
-    },
-    os: {
-      type: String,
-      required: true,
-    },
-    storage: {
-      type: String,
-      required: true,
-    },
-    img_link: {
-      type: String,
-      required: true,
-    },
-    display: {
-      type: Number, // convert to a number if needed
-      required: true,
-    },
-    rating: {
-      type: Number,
-      default: 0,
-    },
-    no_of_ratings: {
-      type: Number,
-      default: 0,
-    },
-    no_of_reviews: {
-      type: Number,
-      default: 0,
-    },
-    laptop_brand: {
-      type: String,
-      required: true,
-    },
-    os_brand: {
-      type: String,
-      required: true,
-    },
-    processor_brand: {
-      type: String,
-      required: true,
-    },
-    usecases: {
-      type: String,
-      required: false,
-    },
-  },
-  { timestamps: true }
-);
+const technicalDetailsSchema = new mongoose.Schema({
+  Brand: String,
+  Manufacturer: String,
+  Series: String,
+  Colour: String,
+  FormFactor: String,
+  ItemHeight: String,
+  ItemWidth: String,
+  "Standing screen display size": String,
+  ScreenResolution: String,
+  ProductDimensions: String,
+  Batteries: String,
+  ItemModelNumber: String,
+  ProcessorBrand: String,
+  ProcessorType: String,
+  ProcessorSpeed: String,
+  ProcessorCount: String,
+  RAMSize: String,
+  MemoryTechnology: String,
+  MaximumMemorySupported: String,
+  HardDriveSize: String,
+  HardDiskDescription: String,
+  HardDriveInterface: String,
+  AudioDetails: String,
+  GraphicsChipsetBrand: String,
+  GraphicsCardDescription: String,
+  GraphicsRAMType: String,
+  GraphicsCardInterface: String,
+  ConnectivityType: String,
+  NumberOfUSB2Ports: String,
+  NumberOfUSB3Ports: String,
+  Voltage: String,
+  OpticalDriveType: String,
+  PowerSource: String,
+  HardwarePlatform: String,
+  OperatingSystem: String,
+  AverageBatteryStandbyLife: String,
+  AverageBatteryLife: String,
+  AreBatteriesIncluded: String,
+  LithiumBatteryEnergyContent: String,
+  NumberOfLithiumIonCells: String,
+  IncludedComponents: String,
+  CountryOfOrigin: String,
+  ItemWeight: String,
+  imageLinks: [String]
+}, { _id: false });
+
+const LaptopSchema = new mongoose.Schema({
+  productName: { type: String, required: true },
+  productLink: { type: String, required: true },
+  cleanProductLink: { type: String, required: true },
+  productId: { type: String, required: true, unique: true },
+  sponsored: { type: String, enum: ['yes', 'no'], default: 'no' },
+  badge: String,
+  price: String,
+  basePrice: String,
+  rating: String,
+  ratingsNumber: String,
+  boughtPastMonth: String,
+  technicalDetails: technicalDetailsSchema
+});
 
 module.exports = mongoose.model('Laptop', LaptopSchema);

@@ -149,8 +149,72 @@ async function scrapeAmazon() {
     const cardData = [];
 
     try {
-        const url = "https://www.amazon.in/s?i=computers&rh=n%3A1375424031%2Cp_123%3A110955%257C219979%257C240067%257C241862%257C247341%257C308445%257C378555%257C391242%257C46655&dc&qid=1746468158&rnid=91049095031&xpid=8-y8VezqgPhL7&ref=sr_nr_p_123_9&ds=v1%3Ae%2BgpbjW65IxHSb1AuAN%2FFQnEmkF%2FjGFEbNJGNaz0CJo";
+        const baseUrl = "https://www.amazon.in/s?i=computers&rh=n%3A1375424031%2Cp_123%3A110955%257C219979%257C240067%257C241862%257C247341%257C308445%257C378555%257C391242%257C46655&dc&qid=1746468158&rnid=91049095031&xpid=8-y8VezqgPhL7&ref=sr_nr_p_123_9&ds=v1%3Ae%2BgpbjW65IxHSb1AuAN%2FFQnEmkF%2FjGFEbNJGNaz0CJo";
 
+        async function navigateToTargetPage(targetPage) {
+            console.log('Starting from safe page 1');
+            let currentPage = 1;
+            let nextPageUrl = null;
+        
+            while(currentPage < targetPage) {
+                console.log(`Navigating to page ${currentPage}`);
+                const targetUrl = currentPage === 1 ? baseUrl : nextPageUrl;
+                console.log(`Navigating to: ${targetUrl}`);
+                
+                try {
+                    await page.goto(targetUrl, {
+                        waitUntil: 'networkidle2',
+                        timeout: 60000
+                    });
+                } catch (error) {
+                    console.log(`Navigation timeout, retrying...`);
+                    await randomDelay(3000, 5000);
+                    continue;
+                }
+        
+                // Check for blocks
+                const isBlocked = await page.evaluate(() => 
+                    document.body.innerText.includes('robot') ||
+                    document.body.innerText.includes('CAPTCHA')
+                );
+                
+                if(isBlocked) {
+                    console.log('Block detected during navigation!');
+                    await page.screenshot({ path: `nav-blocked-${currentPage}.png` });
+                    await randomDelay(20000, 30000);
+                    continue;
+                }
+        
+                // Get next page URL
+                try {
+                    await page.waitForSelector('.s-pagination-next:not(.s-pagination-disabled)', { timeout: 10000 });
+                    nextPageUrl = await page.evaluate(() => {
+                        const nextBtn = document.querySelector('.s-pagination-next:not(.s-pagination-disabled)');
+                        return nextBtn ? nextBtn.href : null;
+                    });
+                } catch (error) {
+                    console.log('No more pages available');
+                    break;
+                }
+        
+                if(!nextPageUrl) {
+                    console.log('Reached last available page:', currentPage);
+                    break;
+                }
+        
+                currentPage++;
+                console.log(`Navigated to page ${currentPage}`);
+                await randomDelay(2500, 4000); // Realistic delay
+            }
+            
+            if(currentPage < targetPage) {
+
+                throw new Error(`Only reached page ${currentPage} instead of 25`);
+            }
+            
+            return page.url();
+        }
+        
         async function scrapePage(url, currentPage = 1, scrapeToPage = null) {
             console.log(`Scraping page ${currentPage}...`);
 
@@ -257,6 +321,7 @@ async function scrapeAmazon() {
                     });
 
                     if (nextPageUrl) {
+                        console.log(`Moving to next page: ${currentPage + 1}`);
                         await randomDelay(500, 1000);
                         await scrapePage(nextPageUrl, currentPage + 1, scrapeToPage);
                     } else {
@@ -268,9 +333,14 @@ async function scrapeAmazon() {
             }
         }
 
-        // Start scraping from first page
-        await scrapePage(url, 1, 2); // Limiting to 2 pages for testing
+        const targetPageUrl = await navigateToTargetPage(3);
+        console.log(`Navigating to page targetPage: ${targetPageUrl}`);
 
+        
+
+        // Start scraping from first page
+        // await scrapePage(url, 1, null); // Limiting to 2 pages for testing
+        await scrapePage(targetPageUrl, 3, 5);
         console.log('Basic scraping finished. Found', cardData.length, 'products');
 
         // Filter products with valid cleanProductLink

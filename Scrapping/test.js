@@ -126,6 +126,77 @@ async function handleCookiesPopup(page) {
 }
 
 // Function to get technical details from product page - optimized
+// async function getProductDetails(url) {
+//     console.log(`Getting technical details for ${url}`);
+
+//     const browser = await puppeteer.launch({
+//         headless: 'new', // Use headless for speed
+//         defaultViewport: {
+//             width: 390,
+//             height: 844,
+//             isMobile: true
+//         }
+//     });
+
+//     const page = await browser.newPage();
+//     await page.setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1');
+
+//     try {
+//         // Faster page loading
+//         await page.goto(url, {
+//             waitUntil: 'domcontentloaded', // Much faster than networkidle2
+//             timeout: 30000
+//         });
+
+//         await handleCookiesPopup(page);
+
+//         // Get technical specs and images in a single evaluation for efficiency
+//         const result = await page.evaluate(() => {
+
+//             const details = {};
+//             // Get technical specifications from all potential tables
+//             const allTechSpecRows = [
+//                 ...document.querySelectorAll(
+//                     '#productDetails_techSpec_section_1 tr, #prodDetails tr, #productDetails_detailBullets_sections1 tr, .techD'
+//                 ),
+//             ];
+
+//             allTechSpecRows.forEach(row => {
+//                 const keyElement = row.querySelector('th, .prodDetSectionEntry');
+//                 const valueElement = row.querySelector('td, .prodDetAttrValue');
+
+//                 if (keyElement && valueElement) {
+//                     const key = keyElement.textContent.trim().replace(/\u200E/g, '');
+//                     const value = valueElement.textContent.trim().replace(/\u200E/g, '');
+//                     if (key && value) details[key] = value;
+//                 }
+//             });
+
+//             // Get image links
+//             const imageLinks = [];
+//             const elements = document.querySelectorAll('.a-carousel-viewport.a-gesture.a-gesture-horizontal li[data-csa-c-media-type="IMAGE"]');
+//             elements.forEach(element => {
+//                 const id = element.getAttribute('data-csa-c-element-id');
+//                 if (id) {
+//                     imageLinks.push(`https://m.media-amazon.com/images/I/${id}._SL1500_.jpg`);
+//                 }
+//             });
+
+//             return { details, imageLinks };
+//         });
+
+//         await browser.close();
+
+//         return {
+//             ...result.details,
+//             imageLinks: result.imageLinks
+//         };
+//     } catch (error) {
+//         console.error(`Error getting details for ${url}: ${error.message}`);
+//         await browser.close();
+//         return { error: error.message };
+//     }
+// }
 async function getProductDetails(url) {
     console.log(`Getting technical details for ${url}`);
 
@@ -152,35 +223,85 @@ async function getProductDetails(url) {
 
         // Get technical specs and images in a single evaluation for efficiency
         const result = await page.evaluate(() => {
-
             const details = {};
-            // Get technical specifications from all potential tables
-            const allTechSpecRows = [
-                ...document.querySelectorAll(
-                    '#productDetails_techSpec_section_1 tr, #prodDetails tr, #productDetails_detailBullets_sections1 tr, .techD'
-                ),
+            
+            // More comprehensive selectors for product details tables
+            const allTechSpecContainers = [
+                '#productDetails_techSpec_section_1',
+                '#techSpec_section_1',
+                '#prodDetails .prodDetTable',
+                '#productDetails_detailBullets_sections1',
+                '.a-keyvalue.prodDetTable',
+                '#productDetails_db_sections',
+                '.techD'
             ];
-
-            allTechSpecRows.forEach(row => {
-                const keyElement = row.querySelector('th, .prodDetSectionEntry');
-                const valueElement = row.querySelector('td, .prodDetAttrValue');
-
-                if (keyElement && valueElement) {
-                    const key = keyElement.textContent.trim().replace(/\u200E/g, '');
-                    const value = valueElement.textContent.trim().replace(/\u200E/g, '');
-                    if (key && value) details[key] = value;
+            
+            // Process each container that exists
+            allTechSpecContainers.forEach(selector => {
+                const containers = document.querySelectorAll(selector);
+                containers.forEach(container => {
+                    // Get all rows from the container
+                    const rows = container.querySelectorAll('tr');
+                    rows.forEach(row => {
+                        const keyElement = row.querySelector('th, .prodDetSectionEntry, .a-color-secondary');
+                        const valueElement = row.querySelector('td, .prodDetAttrValue, .a-size-base');
+                        
+                        if (keyElement && valueElement) {
+                            // Clean up text
+                            const key = keyElement.textContent.trim().replace(/\u200E/g, '');
+                            const value = valueElement.textContent.trim().replace(/\u200E/g, '');
+                            
+                            if (key && value) {
+                                details[key] = value;
+                            }
+                        }
+                    });
+                });
+            });
+            
+            // Alternative format: look for bullet points in product descriptions
+            const bulletSections = document.querySelectorAll('.a-unordered-list .a-list-item');
+            bulletSections.forEach(item => {
+                const text = item.textContent.trim();
+                // Look for key-value patterns like "RAM: 8GB"
+                const match = text.match(/^(.*?):\s*(.*?)$/);
+                if (match && match[1] && match[2]) {
+                    const key = match[1].trim();
+                    const value = match[2].trim();
+                    if (key && value) {
+                        details[key] = value;
+                    }
                 }
             });
-
+            
             // Get image links
             const imageLinks = [];
-            const elements = document.querySelectorAll('.a-carousel-viewport.a-gesture.a-gesture-horizontal li[data-csa-c-media-type="IMAGE"]');
-            elements.forEach(element => {
+            
+            // Method 1: Standard carousel images
+            const carouselElements = document.querySelectorAll('.a-carousel-viewport.a-gesture.a-gesture-horizontal li[data-csa-c-media-type="IMAGE"]');
+            carouselElements.forEach(element => {
                 const id = element.getAttribute('data-csa-c-element-id');
                 if (id) {
                     imageLinks.push(`https://m.media-amazon.com/images/I/${id}._SL1500_.jpg`);
                 }
             });
+            
+            // Method 2: Alternative image containers
+            if (imageLinks.length === 0) {
+                const altImageElements = document.querySelectorAll('#altImages img, #imageBlock img, .imgTagWrapper img');
+                altImageElements.forEach(img => {
+                    const src = img.getAttribute('src');
+                    if (src && src.includes('images/I/')) {
+                        // Extract image ID for high-res version
+                        const baseImgId = src.split('images/I/')[1]?.split('_')[0];
+                        if (baseImgId) {
+                            imageLinks.push(`https://m.media-amazon.com/images/I/${baseImgId}._SL1500_.jpg`);
+                        } else if (src.includes('http')) {
+                            imageLinks.push(src);
+                        }
+                    }
+                });
+            }
 
             return { details, imageLinks };
         });
@@ -197,7 +318,6 @@ async function getProductDetails(url) {
         return { error: error.message };
     }
 }
-
 async function scrapeAmazon() {
     // Main scraping browser
     const browser = await puppeteer.launch({
@@ -258,7 +378,7 @@ async function scrapeAmazon() {
 
     try {
         const baseUrl = "https://www.amazon.in/s?i=computers&rh=n%3A1375424031%2Cp_123%3A110955%257C219979%257C240067%257C241862%257C247341%257C308445%257C378555%257C391242%257C46655&dc&qid=1746468158&rnid=91049095031&xpid=8-y8VezqgPhL7&ref=sr_nr_p_123_9&ds=v1%3Ae%2BgpbjW65IxHSb1AuAN%2FFQnEmkF%2FjGFEbNJGNaz0CJo";
-
+        // const targetPageUrl = baseUrl; // Start from the base URL
         async function navigateToTargetPage(targetPage) {
             console.log('Starting from safe page 1');
             let currentPage = 1;
@@ -441,14 +561,14 @@ async function scrapeAmazon() {
             }
         }
 
-        const targetPageUrl = await navigateToTargetPage(2);
+        const targetPageUrl = await navigateToTargetPage(41);
         console.log(`Navigating to page targetPage: ${targetPageUrl}`);
 
 
 
         // Start scraping from first page
         // await scrapePage(url, 1, null); // Limiting to 2 pages for testing
-        await scrapePage(targetPageUrl, 2, 3);
+        await scrapePage(targetPageUrl, 41, 43);
         console.log('Basic scraping finished. Found', cardData.length, 'products');
 
         // Filter products with valid cleanProductLink

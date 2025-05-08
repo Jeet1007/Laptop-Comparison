@@ -340,7 +340,7 @@ async function scrapeAmazon() {
 
         // Start scraping from first page
         // await scrapePage(url, 1, null); // Limiting to 2 pages for testing
-        await scrapePage(targetPageUrl, 3, 5);
+        await scrapePage(targetPageUrl, 2, 3);
         console.log('Basic scraping finished. Found', cardData.length, 'products');
 
         // Filter products with valid cleanProductLink

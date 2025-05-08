@@ -36,12 +36,44 @@ async function autoScroll(page) {
     });
 }
 
+// Add this function to check if images have loaded
+async function waitForImagesLoaded(page, timeout = 5000) {
+    try {
+        await page.waitForFunction(
+            () => {
+                const images = document.querySelectorAll('img[src*="rukminim"]');
+                return Array.from(images).every(img => {
+                    // Return true if image has loaded or has no src
+                    return img.complete || !img.src;
+                });
+            },
+            { timeout }
+        );
+        console.log("All images loaded successfully");
+        return true;
+    } catch (error) {
+        console.log("Timeout waiting for images to load, continuing anyway");
+        return false;
+    }
+}
+
 // Function to get technical details and images from a product page
 async function getProductDetails(browser, productUrl) {
     console.log(`Getting details for: ${productUrl}`);
 
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
+
+    // Add this right after creating a new page
+    let imageUrlsFromNetwork = new Set();
+    page.on('response', async (response) => {
+        const url = response.url();
+        if (url.includes('rukminim') && url.includes('.jpeg') && response.status() === 200) {
+            // Convert to high res url
+            const highResUrl = url.replace(/\/\d+\/\d+\//, '/1664/1664/').replace(/\?q=\d+/, '?q=90');
+            imageUrlsFromNetwork.add(highResUrl);
+        }
+    });
 
     try {
         // First load the product page
@@ -181,206 +213,198 @@ async function getProductDetails(browser, productUrl) {
             return details;
         });
 
-        // Log the extracted specifications count
-        console.log(`Extracted ${Object.keys(technicalDetails).length} specifications`);
+        // Add this improved image extraction function to your getProductDetails function
+        async function extractAllProductImages(page, productUrl) {
+            console.log(`Extracting all images for: ${productUrl}`);
 
-        // Replace your current image extraction with this more focused approach
-        let imageLinks = await page.evaluate(() => {
-            const urls = new Set();
+            // First try the direct approach - get images without clicking
+            let imageLinks = await page.evaluate(() => {
+                const urls = new Set();
 
-            // Helper to convert to high-res
-            const getHighResUrl = (url) => {
-                if (!url || typeof url !== 'string') return null;
-                if (url.startsWith('data:')) return null;
+                // Helper to convert to high-res
+                const getHighResUrl = (url) => {
+                    if (!url || typeof url !== 'string' || url.startsWith('data:')) return null;
+                    // Convert to highest resolution
+                    let highResUrl = url.replace(/\/\d+\/\d+\//, '/1664/1664/').replace(/\?q=\d+/, '?q=90');
+                    if (highResUrl.startsWith('//')) highResUrl = 'https:' + highResUrl;
+                    return highResUrl;
+                };
 
-                // For the big preview image (highest quality)
-                // Changes from /416/416/ to /1664/1664/ and sets q=90
-                let highResUrl = url.replace(/\/\d+\/\d+\//, '/1664/1664/');
-                highResUrl = highResUrl.replace(/\?q=\d+/, '?q=90');
-
-                if (highResUrl.startsWith('//')) {
-                    highResUrl = 'https:' + highResUrl;
-                }
-
-                return highResUrl;
-            };
-
-            // First get any currently visible large images
-            const mainImage = document.querySelector('img.DByuf4.IZexXJ');
-            if (mainImage && mainImage.src) {
-                // Check for srcset (higher quality)
-                if (mainImage.srcset) {
-                    const srcParts = mainImage.srcset.split(',');
-                    if (srcParts.length > 0) {
-                        // Get the 2x version which is higher quality
-                        const highResSrc = srcParts.find(part => part.includes('2x'));
-                        if (highResSrc) {
-                            const imgUrl = highResSrc.trim().split(' ')[0];
-                            const highResUrl = getHighResUrl(imgUrl);
-                            if (highResUrl) urls.add(highResUrl);
-                        }
+                // Get all image elements
+                const allImages = document.querySelectorAll('img[src*="rukminim"]');
+                allImages.forEach(img => {
+                    if (img.src && (img.width > 100 || img.height > 100)) {
+                        const highResUrl = getHighResUrl(img.src);
+                        if (highResUrl) urls.add(highResUrl);
                     }
-                }
+                });
 
-                // Also get the main src as backup
-                const highResUrl = getHighResUrl(mainImage.src);
-                if (highResUrl) urls.add(highResUrl);
+                return Array.from(urls);
+            });
+
+            if (imageLinks.length >= 5) {
+                console.log(`Found ${imageLinks.length} images with static extraction`);
+                return imageLinks;
             }
 
-            // Check for the super high-res preview image
-            const largePreview = document.querySelector('img.SuLbm2');
-            if (largePreview && largePreview.src) {
-                urls.add(largePreview.src); // Already high-res
-            }
+            // If we need more images, try the interactive approach
+            console.log("Using interactive approach to get all images...");
 
-            return Array.from(urls);
-        });
+            // Make sure we're on the product page
+            await page.goto(productUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+            await waitForImagesLoaded(page, 3000);
+            await page.waitForTimeout(2000);
 
-        // If we didn't get enough images, try clicking each thumbnail
-        if (imageLinks.length < 10) {
-            console.log('Trying interactive thumbnail clicking to get ALL product images...');
-
-            // Navigate to product page if needed
-            await page.goto(productUrl, { waitUntil: 'networkidle2', timeout: 60000 });
-            await handleCookiesPopup(page);
-
-            // Give the page time to fully load
-            await new Promise(resolve => setTimeout(resolve, 3000));
-
-            // Click each thumbnail and extract the resulting big image
-            const clickedImageUrls = await page.evaluate(async () => {
+            // Try to extract images using the thumbnail navigation
+            const interactiveImages = await page.evaluate(async () => {
                 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-                const foundUrls = new Set();
+                const allImageUrls = new Set();
 
-                // Log what's available on the page for debugging
-                console.log("Looking for thumbnails using selectors:");
+                // Helper for high-res images
+                const getHighResUrl = (url) => {
+                    if (!url || typeof url !== 'string' || url.startsWith('data:')) return null;
+                    let highResUrl = url.replace(/\/\d+\/\d+\//, '/1664/1664/').replace(/\?q=\d+/, '?q=90');
+                    if (highResUrl.startsWith('//')) highResUrl = 'https:' + highResUrl;
+                    return highResUrl;
+                };
 
-                // Directly target the exact structure from your HTML
-                const thumbs = document.querySelectorAll('ul.ZqtVYK li.YGoYIP div.HXf4Qp');
-                console.log(`Found ${thumbs.length} thumbnails to click`);
-
-                if (thumbs.length === 0) {
-                    // Alternative selector fallbacks if the main one fails
-                    const alternativeThumbs = document.querySelectorAll('ul[class*="thumbnail"] li, div[class*="thumbnail"] div');
-                    console.log(`Found ${alternativeThumbs.length} alternative thumbnails`);
-
-                    // Use these if primary selector failed
-                    if (alternativeThumbs.length > 0) {
-                        for (let i = 0; i < alternativeThumbs.length; i++) {
-                            try {
-                                alternativeThumbs[i].click();
-                                await sleep(1500); // Longer wait for image to load
-
-                                // Get ALL possible image formats
-                                collectAllImages(foundUrls);
-                            } catch (e) {
-                                console.error(`Error with alternative thumbnail ${i}: ${e.message}`);
-                            }
-                        }
-                    }
-                } else {
-                    // Click each thumbnail and get ALL resulting images
-                    for (let i = 0; i < thumbs.length; i++) {
-                        try {
-                            console.log(`Clicking thumbnail ${i + 1}/${thumbs.length}`);
-                            thumbs[i].click();
-                            await sleep(1500); // Longer wait for image to load
-
-                            // Get ALL possible images without skipping any
-                            collectAllImages(foundUrls);
-                        } catch (e) {
-                            console.error(`Error clicking thumbnail ${i}: ${e.message}`);
-                        }
-                    }
-                }
-
-                // Function to collect all possible images without early returns
-                function collectAllImages(urlSet) {
-                    // 1. Try the large preview image (highest quality)
-                    const largePreview = document.querySelector('img.SuLbm2');
-                    if (largePreview && largePreview.src) {
-                        urlSet.add(largePreview.src);
-                    }
-
-                    // 2. Try the main product image
+                // Function to extract current visible image
+                const extractCurrentVisibleImage = () => {
+                    // Try all possible selectors for the main product image
                     const mainImageSelectors = [
                         'img.DByuf4.IZexXJ',
-                        'img.DByuf4',
-                        'div._4WELSP img',
-                        'div._3nMexc img',
                         'img._396cs4',
-                        'img[src*="rukminim"][src*="original"]'
+                        'img[src*="rukminim"][width="500"]',
+                        'div._3nMexc img',
+                        'div._4WELSP img',
+                        '.CXW8mj img'
                     ];
 
-                    // Try each selector
                     for (const selector of mainImageSelectors) {
-                        const mainImage = document.querySelector(selector);
-                        if (mainImage) {
-                            // Process srcset for highest quality
-                            if (mainImage.srcset) {
-                                const srcParts = mainImage.srcset.split(',');
-                                const highResSrc = srcParts.find(part => part.includes('2x'));
-                                if (highResSrc) {
-                                    const imgUrl = highResSrc.trim().split(' ')[0];
-                                    // Convert to highest resolution
-                                    let highResUrl = imgUrl.replace(/\/\d+\/\d+\//, '/1664/1664/');
-                                    highResUrl = highResUrl.replace(/\?q=\d+/, '?q=90');
+                        const img = document.querySelector(selector);
+                        if (img && img.src) {
+                            const highResUrl = getHighResUrl(img.src);
+                            if (highResUrl) allImageUrls.add(highResUrl);
+                        }
+                    }
+                };
 
-                                    if (highResUrl.startsWith('//')) {
-                                        highResUrl = 'https:' + highResUrl;
-                                    }
+                // First check if we have the exact thumbnail structure from the HTML
+                const thumbsContainer = document.querySelector('ul.ZqtVYK');
+                if (thumbsContainer) {
+                    console.log("Found thumbnail container with ZqtVYK class");
+                    const thumbDivs = thumbsContainer.querySelectorAll('li.YGoYIP div.HXf4Qp');
+                    console.log(`Found ${thumbDivs.length} thumbnail divs`);
 
-                                    urlSet.add(highResUrl);
-                                }
-                            }
+                    // First extract the current visible image
+                    extractCurrentVisibleImage();
 
-                            // Process src attribute
-                            if (mainImage.src) {
-                                let highResUrl = mainImage.src;
-                                highResUrl = highResUrl.replace(/\/\d+\/\d+\//, '/1664/1664/');
-                                highResUrl = highResUrl.replace(/\?q=\d+/, '?q=90');
+                    // Click each thumbnail and extract its image
+                    for (let i = 0; i < thumbDivs.length; i++) {
+                        try {
+                            console.log(`Clicking thumbnail ${i + 1}/${thumbDivs.length}`);
+                            thumbDivs[i].click();
+                            await sleep(800); // Wait for image to load
+                            extractCurrentVisibleImage();
+                        } catch (e) {
+                            console.log(`Error clicking thumbnail ${i + 1}: ${e.message}`);
+                        }
+                    }
+                }
+                // Fallback to alternative thumbnail structures
+                else {
+                    console.log("Using fallback thumbnail detection");
 
-                                if (highResUrl.startsWith('//')) {
-                                    highResUrl = 'https:' + highResUrl;
-                                }
+                    // Extract current visible image first
+                    extractCurrentVisibleImage();
 
-                                urlSet.add(highResUrl);
-                            }
+                    // Try various selector patterns for thumbnails
+                    const thumbnailSelectors = [
+                        'div[class*="thumbnail"] img',
+                        'ul[class*="thumbnail"] li img',
+                        'div[class*="thumb"] img',
+                        'ul[class*="thumb"] li img',
+                        'div.q6DClP',
+                        'li._20Gt85 div',
+                        'img._0DkuPH'
+                    ];
+
+                    // Find the right selector that gives us thumbnails
+                    let thumbnails = [];
+                    for (const selector of thumbnailSelectors) {
+                        const elements = document.querySelectorAll(selector);
+                        if (elements.length > 1) {
+                            console.log(`Found ${elements.length} thumbnails with selector: ${selector}`);
+                            thumbnails = Array.from(elements);
+                            break;
                         }
                     }
 
-                    // 3. Last resort - look for any large images that were loaded
-                    const allLargeImages = Array.from(document.querySelectorAll('img[src*="rukminim"]'))
-                        .filter(img => img.width > 200 || img.height > 200)
-                        .filter(img => !img.src.includes('logo') && !img.src.includes('icon'));
-
-                    allLargeImages.forEach(img => {
-                        let highResUrl = img.src;
-                        highResUrl = highResUrl.replace(/\/\d+\/\d+\//, '/1664/1664/');
-                        highResUrl = highResUrl.replace(/\?q=\d+/, '?q=90');
-
-                        if (highResUrl.startsWith('//')) {
-                            highResUrl = 'https:' + highResUrl;
+                    // Click each thumbnail and extract image
+                    for (let i = 0; i < thumbnails.length; i++) {
+                        try {
+                            console.log(`Clicking alternative thumbnail ${i + 1}/${thumbnails.length}`);
+                            thumbnails[i].click();
+                            await sleep(800);
+                            extractCurrentVisibleImage();
+                        } catch (e) {
+                            console.log(`Error with alternative thumbnail ${i + 1}: ${e.message}`);
                         }
+                    }
 
-                        urlSet.add(highResUrl);
+                    // If still no thumbnails found, try parent elements that might be clickable
+                    if (thumbnails.length === 0) {
+                        const smallImages = document.querySelectorAll('img[width="64"], img[width="128"]');
+                        console.log(`Found ${smallImages.length} small images that might be thumbnails`);
+
+                        for (let i = 0; i < smallImages.length; i++) {
+                            try {
+                                // Try clicking the parent element instead
+                                const clickTarget = smallImages[i].closest('div') || smallImages[i];
+                                clickTarget.click();
+                                await sleep(800);
+                                extractCurrentVisibleImage();
+                            } catch (e) {
+                                console.log(`Error with small image ${i + 1}: ${e.message}`);
+                            }
+                        }
+                    }
+                }
+
+                // Final fallback - just get all images on the page
+                if (allImageUrls.size < 3) {
+                    document.querySelectorAll('img[src*="rukminim"]').forEach(img => {
+                        if (img.width > 200 || img.height > 200) {
+                            const highResUrl = getHighResUrl(img.src);
+                            if (highResUrl) allImageUrls.add(highResUrl);
+                        }
                     });
                 }
 
-                console.log(`Total unique image URLs found: ${foundUrls.size}`);
-                return Array.from(foundUrls);
+                return Array.from(allImageUrls);
             });
 
-            console.log(`Interactive clicking found ${clickedImageUrls.length} images`);
+            console.log(`Found ${interactiveImages.length} images with interactive extraction`);
 
-            // Combine results
-            imageLinks = [...new Set([...imageLinks, ...clickedImageUrls])];
+            // Combine both approaches and remove duplicates
+            const allImages = [...new Set([...imageLinks, ...interactiveImages])];
+            console.log(`Total unique images: ${allImages.length}`);
+
+            return allImages;
         }
 
-        console.log(`Found ${imageLinks.length} unique images`);
+        // Add this to your getProductDetails function
+        // Replace your existing image extraction code with this:
+
+        // Extract all product images
+        const imageLinks = await extractAllProductImages(page, productUrl);
+        console.log(`Found ${imageLinks.length} product images`);
 
         // Limit to 10 images
         technicalDetails.imageLinks = imageLinks.slice(0, 10);
+
+        // Log the extracted specifications count
+        console.log(`Extracted ${Object.keys(technicalDetails).length} specifications`);
 
         // At the end of your getProductDetails function, before returning results:
         // If we didn't get any specs, at least get the title/price/description
@@ -438,8 +462,19 @@ async function getProductDetails(browser, productUrl) {
 // Update scrapeFlipkart function to remove screenshots
 async function scrapeFlipkart() {
     const browser = await puppeteer.launch({
-        headless: false,
-        defaultViewport: null,
+        headless: 'new', // Use headless for speed
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage', // Prevents crashes when taking screenshots
+            '--disable-accelerated-2d-canvas',
+            '--disable-gpu',
+            '--window-size=1920,1080'
+        ],
+        defaultViewport: {
+            width: 1280,
+            height: 800
+        }
     });
 
     const page = await browser.newPage();
@@ -532,7 +567,7 @@ async function scrapeFlipkart() {
             }
         }
 
-        await scrapePage(url, 1, 2);
+        await scrapePage(url, 1, 1);
 
         console.log('Basic scraping finished. Getting product details...');
         const enhancedData = [];

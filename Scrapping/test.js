@@ -561,14 +561,14 @@ async function scrapeAmazon() {
             }
         }
 
-        const targetPageUrl = await navigateToTargetPage(41);
+        const targetPageUrl = await navigateToTargetPage(2);
         console.log(`Navigating to page targetPage: ${targetPageUrl}`);
 
 
 
         // Start scraping from first page
         // await scrapePage(url, 1, null); // Limiting to 2 pages for testing
-        await scrapePage(targetPageUrl, 41, 43);
+        await scrapePage(targetPageUrl, 2, 3);
         console.log('Basic scraping finished. Found', cardData.length, 'products');
 
         // Filter products with valid cleanProductLink

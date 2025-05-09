@@ -19,6 +19,11 @@ import { DataContext } from "../context/DataContext";
 
 const SearchBar = () => {
   //   const [data, setData] = useState([]);
+
+  const API_URL = import.meta.env.PROD 
+    ? import.meta.env.VITE_API_URL_PROD 
+    : import.meta.env.VITE_API_URL;
+
   const { isOpen, setIsOpen } = useContext(DataContext);
   const [ResultLength, setResultLength] = useState(0);
   const [query, setQuery] = useState("");
@@ -39,7 +44,7 @@ const SearchBar = () => {
 
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}`,
+        API_URL,
         formData,
         {
           headers: {

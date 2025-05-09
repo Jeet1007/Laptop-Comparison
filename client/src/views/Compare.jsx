@@ -7,6 +7,11 @@ import Comment from "../component/Comment";
 import { useParams } from "react-router-dom";
 
 function Compare() {
+    const API_URL = import.meta.env.PROD 
+    ? import.meta.env.VITE_API_URL_PROD 
+    : import.meta.env.VITE_API_URL;
+
+
     const [laptopData, setLaptopData] = useState(null);
     const [loading, setLoading] = useState(true);
     const { id } = useParams();
@@ -24,7 +29,7 @@ function Compare() {
         console.log(import.meta.env.VITE_API_URL);
 
         try {
-            const res = await axios.post(`${import.meta.env.VITE_API_URL}`, formData, {
+            const res = await axios.post(`${API_URL}`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data"
                 },

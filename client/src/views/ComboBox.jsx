@@ -22,6 +22,12 @@ import {
 import axios from "axios";
 
 function ComboboxDemo({ id, setId }) {
+
+  const API_URL = import.meta.env.PROD 
+    ? import.meta.env.VITE_API_URL_PROD 
+    : import.meta.env.VITE_API_URL;
+
+  
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [DummyName, setDummyName] = useState("");
@@ -38,7 +44,7 @@ function ComboboxDemo({ id, setId }) {
     // console.log(searchQuery);
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}`,
+        API_URL,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

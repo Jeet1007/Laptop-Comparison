@@ -5,6 +5,11 @@ import CompareLaptop from "../component/CompareLaptop";
 
 
 const ComparisonPage = () => {
+
+  const API_URL = import.meta.env.PROD 
+    ? import.meta.env.VITE_API_URL_PROD 
+    : import.meta.env.VITE_API_URL;
+    
   const { id1, id2 } = useParams();
   const [laptopData1, setLaptopData1] = useState(null);
   const [laptopData2, setLaptopData2] = useState(null);
@@ -23,7 +28,7 @@ const ComparisonPage = () => {
     console.log(import.meta.env.VITE_API_URL);
 
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}`, formData, {
+      const res = await axios.post(API_URL, formData, {
         headers: {
           "Content-Type": "multipart/form-data"
         },

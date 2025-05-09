@@ -20,6 +20,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import axios from "axios";
+import { makeNotebRequest } from '@/utils/apiClient';
 
 function ComboboxDemo({ id, setId }) {
 
@@ -45,7 +46,8 @@ function ComboboxDemo({ id, setId }) {
     };
 
     try {
-      const res = await axios.post(API_URL, requestData);
+      // const res = await axios.post(API_URL, requestData);
+      const res = await makeNotebRequest(requestData);
       setResult(res.data.result || []);
       setLoading(false);
     } catch (err) {

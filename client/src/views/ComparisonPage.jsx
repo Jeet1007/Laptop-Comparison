@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import CompareLaptop from "../component/CompareLaptop";
+import { makeNotebRequest } from '@/utils/apiClient';
 
 
 const ComparisonPage = () => {
@@ -30,7 +31,8 @@ const ComparisonPage = () => {
     };
   
     try {
-      const res = await axios.post(API_URL, requestData);
+      // const res = await axios.post(API_URL, requestData);
+      const res = await makeNotebRequest(requestData);
       setLaptopData1(res.data.result[0]);
       setLoading(false);
     } catch (err) {

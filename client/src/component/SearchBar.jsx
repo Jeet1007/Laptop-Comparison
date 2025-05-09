@@ -16,6 +16,7 @@ import { Fragment } from "react";
 import axios from "axios";
 import { useContext } from "react";
 import { DataContext } from "../context/DataContext";
+import { makeNotebRequest } from "@/utils/apiClient";
 
 const SearchBar = () => {
   //   const [data, setData] = useState([]);
@@ -45,7 +46,8 @@ const SearchBar = () => {
     };
   
     try {
-      const res = await axios.post(API_URL, requestData);
+      // const res = await axios.post(API_URL, requestData);
+      const res = await makeNotebRequest(requestData);
       setResult(res.data.result);
       const tempLength = Object.keys(res.data.result).length;
       setResultLength(tempLength);

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import "../styles/CompareComponent.css";
+import { makeNotebRequest } from '@/utils/apiClient';
 
 const LaptopSearch = ({ placeholder, onSelectLaptop }) => {
 
@@ -27,7 +28,9 @@ const LaptopSearch = ({ placeholder, onSelectLaptop }) => {
     };
 
     try {
-      const res = await axios.post(API_URL, requestData);
+      // const res = await axios.post(API_URL, requestData);
+      const res = await makeNotebRequest(requestData);
+
       setResult(res.data.result || []);
       setLoading(false);
       setDropdownOpen(true);

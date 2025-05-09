@@ -4,6 +4,7 @@ import LaptopTable from "../component/LaptopTable";
 import TextArea from "../component/TextArea";
 import Comment from "../component/Comment";
 import { useParams } from "react-router-dom";
+import { makeNotebRequest } from '@/utils/apiClient';
 
 function Compare() {
     const API_URL = import.meta.env.PROD 
@@ -29,7 +30,8 @@ function Compare() {
         };
       
         try {
-            const res = await axios.post(API_URL, requestData);
+            // const res = await axios.post(API_URL, requestData);
+            const res = await makeNotebRequest(requestData);
             setLaptopData(res.data.result[0]);
             setLoading(false);
         } catch (err) {

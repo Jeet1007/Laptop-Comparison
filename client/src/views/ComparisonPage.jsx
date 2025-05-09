@@ -6,9 +6,10 @@ import CompareLaptop from "../component/CompareLaptop";
 
 const ComparisonPage = () => {
 
-  const API_URL = import.meta.env.PROD 
-    ? import.meta.env.VITE_API_URL_PROD 
-    : import.meta.env.VITE_API_URL;
+  // const API_URL = import.meta.env.PROD 
+  //   ? import.meta.env.VITE_API_URL_PROD 
+  //   : import.meta.env.VITE_API_URL;
+  const API_URL = import.meta.env.VITE_API_URL_PROD;
 
   const { id1, id2 } = useParams();
   const [laptopData1, setLaptopData1] = useState(null);
@@ -40,6 +41,23 @@ const ComparisonPage = () => {
       console.log("Error", err);
       setLoading(false);
     }
+
+    // In ComparisonPage.jsx fetchLaptopData1 function:
+// try {
+//   const formData = {
+//     apikey: import.meta.env.VITE_API_KEY,
+//     method: "get_model_info_all",
+//     "param[model_id]": id1
+//   };
+  
+//   const res = await axios.post(API_URL, formData);
+//   setLaptopData1(res.data.result[0]);
+//   setLoading(false);
+// } catch (err) {
+//   console.log("Error", err);
+//   setLoading(false);
+// }
+
 
 
   }

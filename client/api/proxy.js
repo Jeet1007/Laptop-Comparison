@@ -21,33 +21,30 @@ export default async function handler(req, res) {
   }
 
   try {
-    if (req.method === 'POST') {
-      // Parse the incoming form data
-      const form = new formidable.IncomingForm();
-      const { fields, files } = await new Promise((resolve, reject) => {
-        form.parse(req, (err, fields, files) => {
-          if (err) return reject(err);
-          resolve({ fields, files });
-        });
+    // Extract form data from the request body
+    const formData = new URLSearchParams();
+    
+    // Add all fields from the request body to the form data
+    if (req.body) {
+      Object.keys(req.body).forEach(key => {
+        formData.append(key, req.body[key]);
       });
-      
-      // Create a new form to send to noteb.com
-      const formData = new FormData();
-      Object.keys(fields).forEach(key => {
-        formData.append(key, fields[key]);
-      });
-      
-      // Forward the request
-      const response = await axios.post(
-        'https://noteb.com/api/webservice.php',
-        formData,
-        { headers: { ...formData.getHeaders() } }
-      );
-      
-      return res.status(200).json(response.data);
-    } else {
-      return res.status(405).end();
     }
+    
+    // Forward the request to noteb.com
+    const response = await fetch('https://noteb.com/api/webservice.php', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
+    
+    // Get response data
+    const data = await response.json();
+    
+    // Return response
+    return res.status(200).json(data);
   } catch (error) {
     console.error('API proxy error:', error);
     return res.status(500).json({ 

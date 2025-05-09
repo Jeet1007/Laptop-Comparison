@@ -7,9 +7,10 @@ import Comment from "../component/Comment";
 import { useParams } from "react-router-dom";
 
 function Compare() {
-    const API_URL = import.meta.env.PROD 
-    ? import.meta.env.VITE_API_URL_PROD 
-    : import.meta.env.VITE_API_URL;
+    // const API_URL = import.meta.env.PROD 
+    // ? import.meta.env.VITE_API_URL_PROD 
+    // : import.meta.env.VITE_API_URL;
+    const API_URL = import.meta.env.VITE_API_URL_PROD;
 
 
     const [laptopData, setLaptopData] = useState(null);

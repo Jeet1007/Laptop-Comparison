@@ -3,6 +3,7 @@ import axios from "axios";
 import "../styles/CompareComponent.css";
 
 const LaptopSearch = ({ placeholder, onSelectLaptop }) => {
+  const API_URL = import.meta.env.VITE_API_URL_PROD;
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState([]);
@@ -21,7 +22,7 @@ const LaptopSearch = ({ placeholder, onSelectLaptop }) => {
 
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}`,
+        API_URL,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

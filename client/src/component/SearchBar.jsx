@@ -20,9 +20,10 @@ import { DataContext } from "../context/DataContext";
 const SearchBar = () => {
   //   const [data, setData] = useState([]);
 
-  const API_URL = import.meta.env.PROD 
-    ? import.meta.env.VITE_API_URL_PROD 
-    : import.meta.env.VITE_API_URL;
+  // const API_URL = import.meta.env.PROD 
+  //   ? import.meta.env.VITE_API_URL_PROD 
+  //   : import.meta.env.VITE_API_URL;
+  const API_URL = import.meta.env.VITE_API_URL_PROD;
 
   const { isOpen, setIsOpen } = useContext(DataContext);
   const [ResultLength, setResultLength] = useState(0);

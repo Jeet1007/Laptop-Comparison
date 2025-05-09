@@ -3,7 +3,11 @@ import axios from "axios";
 import "../styles/CompareComponent.css";
 
 const LaptopSearch = ({ placeholder, onSelectLaptop }) => {
-  const API_URL = import.meta.env.VITE_API_URL_PROD;
+
+  const API_URL = import.meta.env.PROD 
+      ? import.meta.env.VITE_API_URL_PROD 
+      : import.meta.env.VITE_API_URL;
+  
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState([]);
@@ -15,18 +19,15 @@ const LaptopSearch = ({ placeholder, onSelectLaptop }) => {
 
   const fetchLaptops = async (searchQuery) => {
     setLoading(true);
-    const formData = new FormData();
-    formData.append("apikey", `${import.meta.env.VITE_API_KEY}`);
-    formData.append("method", "list_models");
-    formData.append("param[model_name]", searchQuery);
+    
+    const requestData = {
+      apikey: import.meta.env.VITE_API_KEY,
+      method: "list_models",
+      "param[model_name]": searchQuery
+    };
 
     try {
-      const res = await axios.post(
-        API_URL,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-
+      const res = await axios.post(API_URL, requestData);
       setResult(res.data.result || []);
       setLoading(false);
       setDropdownOpen(true);

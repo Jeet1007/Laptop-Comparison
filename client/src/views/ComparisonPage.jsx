@@ -6,10 +6,10 @@ import CompareLaptop from "../component/CompareLaptop";
 
 const ComparisonPage = () => {
 
-  // const API_URL = import.meta.env.PROD 
-  //   ? import.meta.env.VITE_API_URL_PROD 
-  //   : import.meta.env.VITE_API_URL;
-  const API_URL = import.meta.env.VITE_API_URL_PROD;
+  const API_URL = import.meta.env.PROD 
+    ? import.meta.env.VITE_API_URL_PROD 
+    : import.meta.env.VITE_API_URL;
+  // const API_URL = import.meta.env.VITE_API_URL_PROD;
 
   const { id1, id2 } = useParams();
   const [laptopData1, setLaptopData1] = useState(null);
@@ -21,88 +21,52 @@ const ComparisonPage = () => {
 
   const fetchLaptopData1 = async () => {
     setLoading(true);
-    const formData = new FormData();
-    formData.append("apikey", `${import.meta.env.VITE_API_KEY}`);
-    //formData.append("apikey", "112233aabbcc");
-    formData.append("method", "get_model_info_all");
-    formData.append("param[model_id]", id1);
-    console.log(import.meta.env.VITE_API_URL);
-
+    
+    // Send as JSON instead of FormData
+    const requestData = {
+      apikey: import.meta.env.VITE_API_KEY,
+      method: "get_model_info_all",
+      "param[model_id]": id1
+    };
+  
     try {
-      const res = await axios.post(API_URL, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data"
-        },
-      });
+      const res = await axios.post(API_URL, requestData);
       setLaptopData1(res.data.result[0]);
       setLoading(false);
-
     } catch (err) {
       console.log("Error", err);
       setLoading(false);
     }
-
-    // In ComparisonPage.jsx fetchLaptopData1 function:
-// try {
-//   const formData = {
-//     apikey: import.meta.env.VITE_API_KEY,
-//     method: "get_model_info_all",
-//     "param[model_id]": id1
-//   };
-  
-//   const res = await axios.post(API_URL, formData);
-//   setLaptopData1(res.data.result[0]);
-//   setLoading(false);
-// } catch (err) {
-//   console.log("Error", err);
-//   setLoading(false);
-// }
-
-
-
-  }
+  };
 
   const fetchLaptopData2 = async () => {
     setLoading(true);
-    const formData = new FormData();
-    formData.append("apikey", `${import.meta.env.VITE_API_KEY}`);
-    //formData.append("apikey", "112233aabbcc");
-    formData.append("method", "get_model_info_all");
-    formData.append("param[model_id]", id2);
-    console.log(import.meta.env.VITE_API_URL);
-
+    
+    // Send as JSON instead of FormData
+    const requestData = {
+      apikey: import.meta.env.VITE_API_KEY,
+      method: "get_model_info_all",
+      "param[model_id]": id2
+    };
+  
     try {
-      const res = await axios.post(API_URL, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data"
-        },
-      });
+      const res = await axios.post(API_URL, requestData);
       setLaptopData2(res.data.result[0]);
       setLoading(false);
-
     } catch (err) {
       console.log("Error", err);
       setLoading(false);
     }
-
-
-  }
+  };
 
    console.log(laptopData1);
    console.log(laptopData2);
-
-
-
-
-
 
   useEffect(() => {
     fetchLaptopData1();
     fetchLaptopData2();
 
   }, [id1, id2]);
-
-
 
   return (
     <>

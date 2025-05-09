@@ -20,10 +20,10 @@ import { DataContext } from "../context/DataContext";
 const SearchBar = () => {
   //   const [data, setData] = useState([]);
 
-  // const API_URL = import.meta.env.PROD 
-  //   ? import.meta.env.VITE_API_URL_PROD 
-  //   : import.meta.env.VITE_API_URL;
-  const API_URL = import.meta.env.VITE_API_URL_PROD;
+  const API_URL = import.meta.env.PROD 
+    ? import.meta.env.VITE_API_URL_PROD 
+    : import.meta.env.VITE_API_URL;
+  // const API_URL = import.meta.env.VITE_API_URL_PROD;
 
   const { isOpen, setIsOpen } = useContext(DataContext);
   const [ResultLength, setResultLength] = useState(0);
@@ -37,33 +37,18 @@ const SearchBar = () => {
 
   const fetchLaptop = async () => {
     setLoading(true);
-    const formData = new FormData();
-    // formData.append("apikey",${import.meta.env.VITE_API_KEY});
-    formData.append("apikey", "112233aabbcc");
-    formData.append("method", "list_models");
-    formData.append("param[model_name]", `${query}`); // Replace with the desired model name
-
+    
+    const requestData = {
+      apikey: import.meta.env.VITE_API_KEY,
+      method: "list_models",
+      "param[model_name]": query
+    };
+  
     try {
-      const res = await axios.post(
-        API_URL,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      //   const parseResult = JSON.parse(res.data.result);
-      //   console.log(query);
-      //   console.log(res.data.message);
-      console.log(res.data.result);
-      // console.log(res.data.result[0]);
-      setResult(res.data.result); // Assuming you want to display the first 10 results
-      //console.log(Object.keys(res?.data?.result?.length));
+      const res = await axios.post(API_URL, requestData);
+      setResult(res.data.result);
       const tempLength = Object.keys(res.data.result).length;
       setResultLength(tempLength);
-      // console.log(length, res.data.result);
       setLoading(false);
     } catch (err) {
       console.log("Error", err);

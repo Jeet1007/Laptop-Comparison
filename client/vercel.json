@@ -1,1 +1,6 @@
-{ "rewrites": [{ "source": "/(.*)", "destination": "/" }] }
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" },
+    { "source": "/api1/:path*", "destination": "https://noteb.com/api/webservice.php/:path*" }
+  ]
+}

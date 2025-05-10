@@ -65,9 +65,9 @@ const CompareComponent = () => {
               >
                 Compare
               </button>
-              <div className="w-full sm:w-auto">
+              {/* <div className="w-full sm:w-auto">
                 <AuthButtons />
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

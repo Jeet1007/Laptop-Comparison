@@ -19,7 +19,7 @@ const randomDelay = (min, max) =>
 async function scrapeProductDetails(page, productUrl) {
     try {
         await page.goto(productUrl, { waitUntil: 'networkidle2', timeout: 60000 });
-        await randomDelay(2000, 5000);
+        // await randomDelay(2000, 5000);
 
         return await page.evaluate(() => {
             const details = {};
@@ -53,36 +53,6 @@ async function scrapeProductDetails(page, productUrl) {
 
             // Image Links - try multiple approaches
             const imageLinks = new Set();
-
-            // Method 1: Carousel items 
-            try {
-                const carouselItems = document.querySelectorAll('li[data-csa-c-media-type="IMAGE"]');
-                carouselItems.forEach(item => {
-                    const elementId = item.getAttribute('data-csa-c-element-id');
-                    if (elementId) {
-                        imageLinks.add(`https://m.media-amazon.com/images/I/${elementId}._SL1500_.jpg`);
-                    }
-                });
-            } catch (e) { }
-
-            // Method 2: Main image display
-            try {
-                const mainImage = document.querySelector('#landingImage, #imgBlkFront');
-                if (mainImage && mainImage.dataset.oldHires) {
-                    imageLinks.add(mainImage.dataset.oldHires);
-                } else if (mainImage && mainImage.src) {
-                    // Convert to high-res version if possible
-                    const src = mainImage.src;
-                    if (src.includes('images/I/')) {
-                        const match = src.match(/images\/I\/([^.]+)/);
-                        if (match && match[1]) {
-                            imageLinks.add(`https://m.media-amazon.com/images/I/${match[1]}._SL1500_.jpg`);
-                        } else {
-                            imageLinks.add(src);
-                        }
-                    }
-                }
-            } catch (e) { }
 
             // Method 3: All thumbnails
             try {
@@ -119,25 +89,37 @@ async function scrapeAmazon() {
     // Initial product listing scrape
     const products = [];
     try {
-        // Use a more specific URL for laptops instead of deals page
-        const laptopUrl = 'https://www.amazon.in/s?i=computers&rh=n%3A1375424031%2Cp_123%3A110955%257C219979%257C240067%257C241862%257C247341%257C308445%257C378555%257C391242&dc&qid=1746464279&rnid=91049095031&xpid=8-y8VezqgPhL7&ref=sr_pg_1";w.amazon.in/s?i=computers&rh=n%3A1375424031%2Cp_123%3A110955%257C219979%257C240067%257C241862%257C247341%257C308445%257C378555%257C391242&dc&qid=1746464279&rnid=91049095031&xpid=8-y8VezqgPhL7&ref=sr_pg_1';
-        console.log(`Navigating to ${laptopUrl}...`);
-        await page.goto(laptopUrl, { waitUntil: 'networkidle2', timeout: 60000 });
-        await randomDelay(2000, 4000);
+        // Start with the deals page (more natural browsing pattern)
+        const dealsUrl = 'https://www.amazon.in/deals';
+        console.log(`First navigating to ${dealsUrl}...`);
+        await page.goto(dealsUrl, { waitUntil: 'networkidle2', timeout: 6000 });
+        await randomDelay(30, 60);
 
-        // Save screenshot to see what's on the page
-        await page.screenshot({ path: 'amazon-debug.png' });
-        console.log('Debug screenshot saved to amazon-debug.png');
-
-        // Handle cookies
+        // Handle cookies if present on deals page
         const cookiesButton = await page.$('#sp-cc-accept');
         if (cookiesButton) {
             await cookiesButton.click();
-            await randomDelay(1000, 2000);
+            await randomDelay(10, 20);
         }
 
+        // Simulate user browsing behavior on deals page
+        await page.evaluate(() => {
+            window.scrollBy(0, 500);
+        });
+
+
+        // Fix the malformed URL (remove the duplicate part after quotation mark)
+        const laptopUrl = 'https://www.amazon.in/s?i=computers&rh=n%3A1375424031%2Cp_123%3A110955%257C219979%257C240067%257C241862%257C247341%257C308445%257C378555%257C391242&dc&qid=1746464279&rnid=91049095031&xpid=8-y8VezqgPhL7&ref=sr_pg_1';
+        console.log(`Now navigating to laptop listings: ${laptopUrl}...`);
+        await page.goto(laptopUrl, { waitUntil: 'networkidle2', timeout: 6000 });
+        await randomDelay(20, 40);
+
+        // Save screenshot to see what's on the page
+        // await page.screenshot({ path: 'amazon-debug.png' });
+        // console.log('Debug screenshot saved to amazon-debug.png');
+
         let pageCount = 1;
-        const maxPages = 3; // Limit to 3 pages for testing
+        const maxPages = 1; // Limit to 3 pages for testing
 
         while (pageCount <= maxPages) {
             console.log(`Scraping page ${pageCount}...`);
@@ -208,14 +190,13 @@ async function scrapeAmazon() {
 
                 if (hasNextPage) {
                     console.log('Clicked next page button. Waiting for navigation...');
-                    await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 10000 })
+                    await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 1000 })
                         .catch(() => console.log('Navigation timeout - continuing anyway'));
 
-                    await randomDelay(3000, 6000);
+                    await randomDelay(30, 60);
                     pageCount++;
 
-                    // Take a screenshot of each page for debugging
-                    await page.screenshot({ path: `amazon-page-${pageCount}.png` });
+
                 } else {
                     console.log('No more pages available.');
                     break;
@@ -246,7 +227,7 @@ async function scrapeAmazon() {
     }
 
     // Scrape individual product details - limit to first 5 for testing
-    const productsToProcess = products.slice(0, 5);
+    const productsToProcess = products.slice(0, 10);
     const finalData = [];
 
     for (const [index, product] of productsToProcess.entries()) {
@@ -280,7 +261,7 @@ async function scrapeAmazon() {
                 fs.writeFileSync('combined_results.json', JSON.stringify(finalData, null, 2));
                 console.log(`Progress saved: ${finalData.length}/${productsToProcess.length}`);
 
-                await randomDelay(5000, 10000); // Longer delay between product pages
+                await randomDelay(5, 10); // Longer delay between product pages
             }
         } catch (error) {
             console.error(`Failed to process ${product.asin}:`, error);

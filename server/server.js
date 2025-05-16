@@ -25,7 +25,8 @@ const cors = require('cors');
 
 // const PORT = process.env.PORT || 8080;
 const corsOptions = {
-  origin: ["http://localhost:5173"]
+  origin: ["http://localhost:5173"],
+  credentials: true,
 }
 
 const app = express();
@@ -61,7 +62,7 @@ connectDB().catch(err=> console.log(err));
 async function connectDB(){
     //add your own connection string
     try{
-        await mongoose.connect(process.env.Local_URL || process.env.Mongo_URL);
+        await mongoose.connect(process.env.Local_URL || process.env.Mongo_URL);  
         // console.log(process.env.Mongo_URL);
         console.log('Database Connected');
     }catch(err){
@@ -74,30 +75,54 @@ async function connectDB(){
 //api routes
 
 //Authentication API
-app.post('/api/register',async(req,res)=>{
-    try{
-        const {email,password,userName} = req.body;
+app.post('/api/register', async(req, res) => {
+    try {
+        const {email, password, name} = req.body;
+        console.log(email, password, name);
+
+        // Check if username already exists
+        const existingUser = await User.findOne({ username: email });
+        if (existingUser) {
+            return res.status(400).json({
+                success: false, 
+                message: 'Username already exists'
+            });
+        }
+
+        // Create user with both username and email set
         const user = new User({
-            email,
-            username: userName,
+            username: email,
+            email: email,  // Add this line to set the email field
+            name: name,
         });
-        const registeredUser = await User.register(user,password);
+        
+        const registeredUser = await User.register(user, password);
 
-        req.login(registeredUser,(err) =>{
-            if(err){
-                console.log('Login Error',err);
-                return res.status(500).json({success:false,message:'Login Error'});
+        req.login(registeredUser, (err) => {
+            if(err) {
+                console.log('Login Error', err);
+                return res.status(500).json({success: false, message: 'Login Error'});
             }
-            res.status(200).json({success:true,message:'User Registered Successfully'});
-        })
+            res.status(200).json({success: true, message: 'User Registered Successfully'});
+        });
 
-    }catch(err){
-        console.log('Registration Error',err);
-        res.status(500).json({success:false,message:'Server Error'});
+    } catch(err) {
+        console.log('Registration Error', err);
+        
+        // Better error handling
+        if (err.code === 11000) {
+            return res.status(400).json({
+                success: false, 
+                message: 'Email already in use'
+            });
+        }
+        
+        res.status(500).json({success: false, message: err.message || 'Server Error'});
     }
 });
 //Login API
 app.post('/api/login',passport.authenticate('local'),(req,res)=>{
+
     res.status(200).json({success:true,message:'User Logged In Successfully'});
 
 });

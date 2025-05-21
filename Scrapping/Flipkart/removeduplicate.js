@@ -11,25 +11,17 @@ const allLaptops = [...Apple, ...Dell, ...HP, ...MSI, ...asar];
 
 
 
-function removeDuplicates(Apple) {
-  const seen = new Set();
-  const uniqueLaptops = [];
-
-  for (const laptop of Apple) {
-    // Using productId as the unique identifier
-    if (!seen.has(laptop.productId)) {
-      seen.add(laptop.productId);
-      uniqueLaptops.push(laptop);
-    }
-  }
-  return uniqueLaptops;
+function removeDuplicates(data) {
+    const filtered = data.filter((_, index) => index % 2 === 0);
+    return filtered 
 }
 
-const appleLaptops = removeDuplicates(Apple);
+const removedLaptops = removeDuplicates(HP);
 
-const outputPath = path.join(__dirname, 'RemoveApple.json');
-fs.writeFileSync(outputPath, JSON.stringify(appleLaptops, null, 2));
 
-console.log(`Successfully removed duplicates! Found ${Apple.length - appleLaptops.length} duplicates.`);
-console.log(`Original count: ${Apple.length}, New count: ${appleLaptops.length}`);
+const outputPath = path.join(__dirname, 'RemoveHp.json');
+fs.writeFileSync(outputPath, JSON.stringify(removedLaptops, null, 2));
+
+console.log(`Successfully removed duplicates! Found ${HP.length - removedLaptops.length} duplicates.`);
+console.log(`Original count: ${HP.length}, New count: ${removedLaptops.length}`);
 console.log(`Output saved to ${outputPath}`);
